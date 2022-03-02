@@ -1,4 +1,5 @@
 from dis import disco
+from tkinter import E
 import discord
 import datetime
 import pytz
@@ -6,7 +7,6 @@ import dateutil.parser
 import requests
 import config
 
-client = discord.Client()
 team_ids = {
     "1": "devils",
     "2": "isles",
@@ -41,7 +41,6 @@ team_ids = {
     "54": "knights",
     "55": "kraken"
 }
-# BOT_URL = https://discord.com/api/oauth2/authorize?client_id=947937415862059108&permissions=2064&scope=bot
 # function to be called daily to receive each day's NHL games in JSON format
 
 
@@ -72,22 +71,29 @@ def convert_timezone(time):
 
 
 def main():
+    client = discord.Client()
+
     games = get_daily_games()
 
     @client.event
     async def on_ready():
         guild = discord.utils.get(client.guilds, name="bottest")
-
         # deletes channels from the Game Day category (besides game-day-muted)
         # TODO figure out how to delete specific channels, i.e. gameday category channels BESIDES game-day-muted
-        game_day_channels = guild.
+
+        # create list of channels in "Game Day" category to make removal of old Game Day channels easier
+        game_day_channels = guild.channels
+        filtered = filter(lambda chan: (chan.category is not None) and chan.category.name ==
+                          "Game Day", game_day_channels)
+        for item in filtered:
+            print(item)
         # creates channels for each game of the day
-        for game in games:
-            away = team_ids.get(str(game.get("teams").get(
-                "away").get("team").get("id")))
-            home = team_ids.get(str(game.get("teams").get(
-                "home").get("team").get("id")))
-            channel = await guild.create_text_channel(away + "-vs-" + home + "-" + convert_timezone(game.get("gameDate")))
+        # for game in games:
+        #     away = team_ids.get(str(game.get("teams").get(
+        #         "away").get("team").get("id")))
+        #     home = team_ids.get(str(game.get("teams").get(
+        #         "home").get("team").get("id")))
+        #     channel = await guild.create_text_channel(away + "-vs-" + home + "-" + convert_timezone(game.get("gameDate")))
     client.run(config.token)
 
 
