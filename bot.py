@@ -1,12 +1,16 @@
 from dis import disco
 from tkinter import E
+from turtle import position
+from unicodedata import category
 import discord
 import datetime
 import pytz
 import dateutil.parser
 import requests
 import config
+import discord.utils
 
+# relating team id to shortened version of names for formatting reasons
 team_ids = {
     "1": "devils",
     "2": "isles",
@@ -65,9 +69,18 @@ def convert_timezone(time):
     utctime = dateutil.parser.parse(time)
     est = utctime.astimezone(pytz.timezone(
         "Canada/Eastern")).strftime("%I%M%p")
+    if(est[2] == "0"):
+        est = est[0: 2] + est[4:]
     if(est[0] == "0"):
         est = est[1:]
     return est
+
+
+async def delete_gameday_channel(channel):
+    if channel.name != "game-day-muted" and (type(channel) != discord.VoiceChannel):
+        await channel.delete()
+
+# async def
 
 
 def main():
@@ -86,14 +99,20 @@ def main():
         filtered = filter(lambda chan: (chan.category is not None) and chan.category.name ==
                           "Game Day", game_day_channels)
         for item in filtered:
-            print(item)
+            await delete_gameday_channel(item)
+
         # creates channels for each game of the day
-        # for game in games:
-        #     away = team_ids.get(str(game.get("teams").get(
-        #         "away").get("team").get("id")))
-        #     home = team_ids.get(str(game.get("teams").get(
-        #         "home").get("team").get("id")))
-        #     channel = await guild.create_text_channel(away + "-vs-" + home + "-" + convert_timezone(game.get("gameDate")))
+        position = 0  # position used here to store each channel properly withing "Game Day" category
+
+        for game in games:
+            away = team_ids.get(str(game.get("teams").get(
+                "away").get("team").get("id")))
+            home = team_ids.get(str(game.get("teams").get(
+                "home").get("team").get("id")))
+            category = discord.utils.get(
+                guild.categories, name="Game Day")
+            channel = await guild.create_text_channel(away + "-vs-" + home + "-" + convert_timezone(game.get("gameDate")), category=category, position=position)
+            position += 1
     client.run(config.token)
 
 
