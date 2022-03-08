@@ -1,6 +1,5 @@
 from dis import disco
 from turtle import position
-from unicodedata import category
 import discord
 import datetime
 import pytz
