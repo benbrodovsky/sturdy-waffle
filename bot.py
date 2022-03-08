@@ -1,5 +1,4 @@
 from dis import disco
-from tkinter import E
 from turtle import position
 from unicodedata import category
 import discord
