@@ -76,23 +76,34 @@ def convert_timezone(time):
     return est
 
 
+# deletes channels from the Game Day category (besides game-day-muted)
 async def delete_gameday_channel(channel):
     if channel.name != "game-day-muted" and (type(channel) != discord.VoiceChannel):
         await channel.delete()
 
-# async def
+# adds a gameday channel for an individual game, in a server, in a specific position in a category
+
+
+async def add_gameday_channel(game, guild, position):
+    away = team_ids.get(str(game.get("teams").get(
+        "away").get("team").get("id")))
+    home = team_ids.get(str(game.get("teams").get(
+        "home").get("team").get("id")))
+    category = discord.utils.get(
+        guild.categories, name="Game Day")
+    channel = await guild.create_text_channel(away + "-vs-" + home + "-" + convert_timezone(game.get("gameDate")), category=category, position=position)
 
 
 def main():
     client = discord.Client()
 
+    # gets list of games from NHL API, to be used to create the GDC's
     games = get_daily_games()
 
+    # Once the bot is ready, execute the code below
     @client.event
     async def on_ready():
         guild = discord.utils.get(client.guilds, name="bottest")
-        # deletes channels from the Game Day category (besides game-day-muted)
-        # TODO figure out how to delete specific channels, i.e. gameday category channels BESIDES game-day-muted
 
         # create list of channels in "Game Day" category to make removal of old Game Day channels easier
         game_day_channels = guild.channels
@@ -101,18 +112,13 @@ def main():
         for item in filtered:
             await delete_gameday_channel(item)
 
-        # creates channels for each game of the day
+        # creates channels for each game of the day, at the very beginning of the "Game Day" category
         position = 0  # position used here to store each channel properly withing "Game Day" category
 
         for game in games:
-            away = team_ids.get(str(game.get("teams").get(
-                "away").get("team").get("id")))
-            home = team_ids.get(str(game.get("teams").get(
-                "home").get("team").get("id")))
-            category = discord.utils.get(
-                guild.categories, name="Game Day")
-            channel = await guild.create_text_channel(away + "-vs-" + home + "-" + convert_timezone(game.get("gameDate")), category=category, position=position)
+            await add_gameday_channel(game=game, guild=guild, position=position)
             position += 1
+    # Runs the bot
     client.run(config.token)
 
 
